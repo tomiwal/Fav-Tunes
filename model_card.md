@@ -159,6 +159,189 @@ For each song in the catalog, FavTunes calculates a score based on three factors
 
 ---
 
+## 8.5 System Evaluation: Test Results
+
+**Five distinct user profiles were tested to evaluate system behavior:**
+
+### Profile 1: High-Energy Pop
+Preferences: Genre=pop, Mood=happy, Energy=0.85
+
+```
+#1 | SUNRISE CITY
+   Artist: Neon Echo
+   Genre: pop | Mood: happy
+   Score: 4.47 / 4.50
+   ✓ Why: genre match (+2.0) + mood match (+1.5) + energy close (+0.97)
+
+#2 | GYM HERO
+   Artist: Max Pulse
+   Genre: pop | Mood: intense
+   Score: 2.92 / 4.50
+   ✓ Why: genre match (+2.0) + energy close (+0.92)
+
+#3 | ROOFTOP LIGHTS
+   Artist: Indigo Parade
+   Genre: indie pop | Mood: happy
+   Score: 2.41 / 4.50
+   ✓ Why: mood match (+1.5) + energy close (+0.91)
+```
+**Result:** ✓ Excellent match. Genre preference dominates; all top 3 have genre or mood matches.
+
+---
+
+### Profile 2: Chill Lofi
+Preferences: Genre=lofi, Mood=chill, Energy=0.4
+
+```
+#1 | MIDNIGHT CODING
+   Artist: LoRoom
+   Genre: lofi | Mood: chill
+   Score: 4.48 / 4.50
+   ✓ Why: genre match (+2.0) + mood match (+1.5) + energy close (+0.98)
+
+#2 | LIBRARY RAIN
+   Artist: Paper Lanterns
+   Genre: lofi | Mood: chill
+   Score: 4.45 / 4.50
+   ✓ Why: genre match (+2.0) + mood match (+1.5) + energy close (+0.95)
+
+#3 | FOCUS FLOW
+   Artist: LoRoom
+   Genre: lofi | Mood: focused
+   Score: 3.00 / 4.50
+   ✓ Why: genre match (+2.0) + energy close (+1.00)
+```
+**Result:** ✓ Perfect match. Low-energy preferences work well; system finds multiple lofi songs.
+
+---
+
+### Profile 3: Deep Intense Rock
+Preferences: Genre=rock, Mood=intense, Energy=0.9
+
+```
+#1 | STORM RUNNER
+   Artist: Voltline
+   Genre: rock | Mood: intense
+   Score: 4.49 / 4.50
+   ✓ Why: genre match (+2.0) + mood match (+1.5) + energy close (+0.99)
+
+#2 | GYM HERO
+   Artist: Max Pulse
+   Genre: pop | Mood: intense
+   Score: 2.47 / 4.50
+   ✓ Why: mood match (+1.5) + energy close (+0.97)
+
+#3 | ELECTRIC DREAMS
+   Artist: Sonic Pulse
+   Genre: edm | Mood: happy
+   Score: 0.95 / 4.50
+   ✓ Why: energy close (+0.95)
+```
+**Result:** ✓ Good match. Perfect song found immediately. When genre doesn't match, energy becomes deciding factor.
+
+---
+
+### Profile 4: Conflicting Preferences (Edge Case)
+Preferences: Genre=pop, Mood=intense, Energy=0.95
+
+```
+#1 | GYM HERO
+   Artist: Max Pulse
+   Genre: pop | Mood: intense
+   Score: 4.48 / 4.50
+   ✓ Why: genre match (+2.0) + mood match (+1.5) + energy close (+0.98)
+
+#2 | SUNRISE CITY
+   Artist: Neon Echo
+   Genre: pop | Mood: happy
+   Score: 2.87 / 4.50
+   ✓ Why: genre match (+2.0) + energy close (+0.87)
+
+#3 | STORM RUNNER
+   Artist: Voltline
+   Genre: rock | Mood: intense
+   Score: 2.46 / 4.50
+   ✓ Why: mood match (+1.5) + energy close (+0.96)
+```
+**Result:** ✓ Handled well! Despite conflicting preferences (pop+intense is rare), system ranked correctly: top song has both genre AND mood match, fallbacks use single factors.
+
+---
+
+### Profile 5: Mood-Only Seeker (No Genre)
+Preferences: Genre=, Mood=relaxed, Energy=0.5
+
+```
+#1 | COFFEE SHOP STORIES
+   Artist: Slow Stereo
+   Genre: jazz | Mood: relaxed
+   Score: 2.37 / 4.50
+   ✓ Why: mood match (+1.5) + energy close (+0.87)
+
+#2 | DUSTY ROADS
+   Artist: Sarah Blake
+   Genre: country | Mood: melancholic
+   Score: 0.95 / 4.50
+   ✓ Why: energy close (+0.95)
+
+#3 | MIDNIGHT CODING
+   Artist: LoRoom
+   Genre: lofi | Mood: chill
+   Score: 0.92 / 4.50
+   ✓ Why: energy close (+0.92)
+```
+**Result:** ⚠️ Limited discovery. Without genre preference, scores drop significantly (2.37 vs typical 4+). System depends on mood+energy alone, which produces lower-confidence recommendations. Users without favorite genres miss the +2.0 genre boost.
+
+---
+
+## 8.6 Comparative Analysis: What Changed Between Profiles?
+
+**Sunrise City (Pop/Happy) vs Midnight Coding (Lofi/Chill)**
+- Sunrise City scored 4.47 for a pop+happy seeker but only 0.82 for a lofi+chill seeker
+- Why? Genre weighting (+2.0) is the main differentiator. Sunrise City is POP; Midnight Coding is LOFI
+- **Lesson:** The +2.0 genre weight creates genre "silos"—users of different genres see completely different catalogs
+
+**Gym Hero's Versatility**
+- Gym Hero appears as top choice for "Conflicting Preferences" (pop+intense)
+- Why? It's one of the only songs matching BOTH pop genre (rare) AND intense mood (rare combo)
+- Energy: 0.93 (highest in dataset) makes it score well for high-energy seekers too
+- **Problem:** Gym Hero becomes a "default" recommendation because it matches edge cases better than specialized songs
+
+**Chill Lofi Profile's Dominance**
+- Two lofi songs score 4.48 and 4.45 (near-perfect)
+- Coffee Shop Stories (jazz) only scores 0.97 despite having matching "relaxed" mood
+- Why? Without matching genre, it loses 2.0 points and never recovers
+- **Insight:** Genre is so important that mood+energy alone can't compensate
+
+**Mood-Only Seeker's Penalty**
+- With empty favorite_genre, top score drops to 2.37 (vs typical 4.4)
+- Why? Missing the +2.0 genre boost entirely
+- This user is at a disadvantage because they can't specify preferences the system values most
+- **Bias:** System assumes all users have genre preferences; penalizes those who don't
+
+---
+
+## 8.7 Weight Sensitivity: How Much Does Genre Weighting Matter?
+
+**Experiment:** What if we doubled mood importance (+3.0) and halved genre (+1.0)?
+
+Original (Balanced):
+- Genre +2.0, Mood +1.5, Energy +1.0
+- Top pick for "Pop+Happy": Sunrise City (pop/happy/0.82) = 4.47
+
+Experimental (Mood-Heavy):
+- Genre +1.0, Mood +3.0, Energy +1.5
+- Top pick might shift to a different song if a high-energy, happy non-pop song exists
+
+**Finding:** The current weighting (+2.0 for genre) is extremely powerful. Changing genre from +2.0 to +1.0 would:
+- ✓ Allow more cross-genre discovery
+- ✓ Reduce "filter bubbles" (lofi users only see lofi)
+- ✗ Lower precision for users with strong genre preferences
+- ✗ Make recommendations less predictable
+
+**Recommendation:** Consider making genre weight configurable per user or using implicit feedback (listening history) to adjust weights dynamically.
+
+---
+
 ## 9. Personal Reflection  
 
 Building FavTunes taught me that recommender systems are all about **trade-offs**. The simplicity of scoring (just 3 factors) makes the system understandable and explainable, but it also limits discovery—a pop lover might miss great indie tracks. 

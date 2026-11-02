@@ -37,7 +37,7 @@ class UserProfile:
 
 class Recommender:
     """OOP implementation using balanced scoring: genre (+2.0), mood (+1.5), energy (+1.0)."""
-
+    """For tester.py """
     def __init__(self, songs: List[Song]):
         self.songs = songs
 
@@ -85,36 +85,39 @@ def load_songs(csv_path: str) -> List[Dict]:
     print(f"Loaded {len(songs)} songs from {csv_path}")
     return songs
 
-def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
-    """Score a song using balanced weighting: genre (+2.0), mood (+1.5), energy (+1.0)."""
+def score_song(user_prefs: Dict, song: Dict, weights: Dict = None) -> Tuple[float, List[str]]:
+    """Score a song using configurable weights (default: balanced weighting)."""
+    if weights is None:
+        weights = {'genre': 2.0, 'mood': 1.5, 'energy': 1.0}
+
     score = 0.0
     reasons = []
 
-    # Genre match: +2.0 points
+    # Genre match
     if song.get('genre', '').lower() == user_prefs.get('favorite_genre', '').lower():
-        score += 2.0
-        reasons.append('genre match (+2.0)')
+        score += weights['genre']
+        reasons.append(f"genre match (+{weights['genre']})")
 
-    # Mood match: +1.5 points
+    # Mood match
     if song.get('mood', '').lower() == user_prefs.get('favorite_mood', '').lower():
-        score += 1.5
-        reasons.append('mood match (+1.5)')
+        score += weights['mood']
+        reasons.append(f"mood match (+{weights['mood']})")
 
-    # Energy similarity: +1.0 × (1 - distance)
+    # Energy similarity: weight × (1 - distance)
     try:
         user_energy = float(user_prefs.get('target_energy', 0.5))
         song_energy = float(song.get('energy', 0.5))
         energy_distance = abs(user_energy - song_energy)
-        energy_score = 1.0 * (1 - energy_distance)
+        energy_score = weights['energy'] * (1 - energy_distance)
         score += energy_score
-        reasons.append(f'energy close (+{energy_score:.2f})')
+        reasons.append(f"energy close (+{energy_score:.2f})")
     except (ValueError, TypeError):
         pass
 
     return (score, reasons)
 
-def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[Dict, float, str]]:
+def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5, weights: Dict = None) -> List[Tuple[Dict, float, str]]:
     """Score all songs and return top k sorted by score with explanations."""
-    scored = [(song, *score_song(user_prefs, song)) for song in songs]
+    scored = [(song, *score_song(user_prefs, song, weights)) for song in songs]
     top_k = sorted(scored, key=lambda x: x[1], reverse=True)[:k]
     return [(song, score, ' + '.join(reasons)) for song, score, reasons in top_k]
