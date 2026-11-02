@@ -1,136 +1,143 @@
-# 🎵 Music Recommender Simulation
+# 🎵 FavTunes: Music Recommender System
 
-## Project Summary
-
-In this project you will build and explain a small music recommender system.
-
-Your goal is to:
-
-- Represent songs and a user "taste profile" as data
-- Design a scoring rule that turns that data into recommendations
-- Evaluate what your system gets right and wrong
-- Reflect on how this mirrors real world AI recommenders
-
-Replace this paragraph with your own summary of what your version does.
+A CLI-first music recommendation engine that suggests songs based on user preferences for **genre**, **mood**, and **energy level**. Built to explore how scoring algorithms work and where bias can hide in real recommender systems.
 
 ---
 
-## How The System Works
+## How It Works
 
-Explain your design in plain language.
+**Balanced Scoring Algorithm:**
+- **Genre Match:** +2.0 points (binary match)
+- **Mood Match:** +1.5 points (binary match)
+- **Energy Similarity:** +1.0 × (1 - distance) (scaled by closeness)
 
-Some prompts to answer:
-The core features that each song will use in my system and the The information my UserProfile will store are Energy, Valence, Genre, Mood. My recommender computes a score for each song with the formula [100 (1 -|reccomended song value| - |fav song value|)]. It calculates how close the different features of the songs are to the users fav song then adds up the points from each features together to give a total closeness match. I'll choose which song to recommend based how high of a point a certain song gets with the calculation. 100 being a perfect match and 0 being a Terrible match
+**Maximum Score:** 4.5 points (perfect match on all factors)
 
+**Process:**
+1. Load songs from CSV catalog
+2. Score each song using the above formula
+3. Rank songs by total score (highest first)
+4. Return top 5 recommendations with explanations
 
-- The system takes in the users fav genre, fav mood, target energy
-- It then loads the songs in the csv database
-- it loops through the available the songs
-- checks if it's a genre is a match +2.0 if yes 0 if no to keep the options broad
-- checks if the mood is a match +1.5 if yes 0 if no
-- checks the energy distance of the current song to the song the user likes 1.0 * 1 - |user_energy - song_energy| (the higher the better)
-- Calculates the total score Genre+Mood+Energy
-- Stores the result Song + score + reasons
-- checks if there are any more songs left to see to score
-- Sorts all songs rank by highest score
-- Then returns the top recommendations about top 3 with explantion.
-
-- What features does each `Song` use in your system
-  - For example: genre, mood, energy, tempo
-- What information does your `UserProfile` store
-- How does your `Recommender` compute a score for each song
-- How do you choose which songs to recommend
-
-You can include a simple diagram or bullet list if helpful.
+Each recommendation shows exactly why it matched: `"genre match (+2.0) + mood match (+1.5) + energy close (+0.98)"`
 
 ---
 
-## Getting Started
+## Quick Start
 
 ### Setup
 
-1. Create a virtual environment (optional but recommended):
-
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate      # Mac or Linux
-   .venv\Scripts\activate         # Windows
-
-2. Install dependencies
-
 ```bash
+# Create virtual environment (optional but recommended)
+python -m venv .venv
+source .venv/bin/activate      # Mac/Linux
+.venv\Scripts\activate         # Windows
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-3. Run the app:
+### Run the Recommender
 
 ```bash
 python -m src.main
 ```
 
-### Running Tests
+Output shows top 5 recommendations for 5 different user profiles:
+- High-Energy Pop
+- Chill Lofi
+- Deep Intense Rock
+- Conflicting Preferences (edge case)
+- Mood-Only Seeker (no genre preference)
 
-Run the starter tests with:
+### Run Tests
 
 ```bash
 pytest
 ```
 
-You can add more tests in `tests/test_recommender.py`.
-
 ---
 
-## Sample Recommendation Output
-
-Paste a sample of your recommender's output here as a text block so a reader can see what it produces:
+## Sample Output
 
 ```
-# e.g.:
-# User profile: genre=indie, mood=chill, energy=low
-# Recommendations:
-#   1. ...
-#   2. ...
-#   3. ...
+#1 | SUNRISE CITY
+   Artist: Neon Echo
+   Genre: pop | Mood: happy
+   Score: 4.47 / 4.50
+   ✓ Why: genre match (+2.0) + mood match (+1.5) + energy close (+0.97)
 ```
 
-**Screenshot or video** *(optional)*: <!-- Insert a screenshot or demo video link here -->
+---
+
+## What I Learned: Key Findings
+
+### ✅ What Works Well
+- Clear, transparent scoring explains every recommendation
+- Genre matching is precise and reliable
+- Energy similarity captures user taste accurately
+- Balanced weighting prevents any one factor from dominating
+
+### ⚠️ Limitations Discovered
+
+1. **Genre Weight Dominance:** +2.0 for genre is so powerful it creates "filter bubbles"
+   - Pop lovers only see pop songs, even when similar mood/energy songs exist in other genres
+   - Lofi listeners are locked into lofi catalog
+
+2. **Genre Preference Required:** Users without a favorite genre lose 2.0 points
+   - Mood-only seekers score max 2.37/4.50 vs typical 4.4+
+   - System assumes all users have genre preferences (it's not optional)
+
+3. **Dataset Bias:** "Gym Hero" over-represents edge cases
+   - One of few pop+intense songs → appears in multiple top recommendations
+   - Small 15-song catalog means rare combos become dominant
+
+4. **No Cross-Genre Discovery:** Hard genre matching prevents finding similar songs outside preferred genre
+   - A jazz fan might love an indie pop song with relaxed mood, but it never scores high
 
 ---
 
-## Experiments You Tried
+## Experiments
 
-Use this section to document the experiments you ran. For example:
+### Weight Sensitivity Test
+Changed weights from balanced (genre +2.0) to mood-heavy (genre +1.0, mood +3.0):
+- **Result:** Genre weight is extremely influential. Halving it would increase cross-genre discovery but reduce precision for genre-specific users
+- **Implication:** Real recommendation systems likely need personalized weights
 
-- What happened when you changed the weight on genre from 2.0 to 0.5
-- What happened when you added tempo or valence to the score
-- How did your system behave for different types of users
-
----
-
-## Limitations and Risks
-
-Summarize some limitations of your recommender.
-
-Examples:
-
-- It only works on a tiny catalog
-- It does not understand lyrics or language
-- It might over favor one genre or mood
-
-You will go deeper on this in your model card.
+### Five User Profiles Tested
+1. **High-Energy Pop** (0.85 energy) → Top score: 4.47
+2. **Chill Lofi** (0.4 energy) → Top score: 4.48
+3. **Deep Intense Rock** (0.9 energy) → Top score: 4.49
+4. **Conflicting Preferences** (pop+intense, 0.95 energy) → Top score: 4.48
+5. **Mood-Only Seeker** (no genre) → Top score: 2.37 ⚠️
 
 ---
 
-## Reflection
+## Project Structure
 
-Read and complete `model_card.md`:
+```
+src/
+  ├── recommender.py    # Scoring logic + OOP/functional implementations
+  ├── main.py           # CLI with formatted output for multiple profiles
+data/
+  └── songs.csv         # 15-song catalog
+model_card.md           # Detailed evaluation, biases, limitations
+```
 
-[**Model Card**](model_card.md)
+---
 
-Write 1 to 2 paragraphs here about what you learned:
+## Deep Dive
 
-- about how recommenders turn data into predictions
-- about where bias or unfairness could show up in systems like this
+For detailed evaluation of system behavior, accuracy, biases, and recommendations for improvement, see **[Model Card](model_card.md)**.
 
+The model card includes:
+- Test results for 5 user profiles with full terminal output
+- Comparative analysis showing why certain songs rank high
+- Weight sensitivity analysis
+- Identification of filter bubbles and unfair outcomes
 
+---
 
+## Key Takeaway
+
+Building even a simple recommender reveals how **weights encode preferences** into systems. The +2.0 for genre isn't just a number—it's a design choice that shapes what millions of users discover. Real-world systems like Spotify optimize these weights endlessly, and understanding that tradeoff is critical to recognizing bias in AI.
