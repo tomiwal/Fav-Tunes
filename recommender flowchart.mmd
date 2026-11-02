@@ -1,0 +1,61 @@
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    A["📥 User Profile<br/>favorite_genre: pop<br/>favorite_mood: happy<br/>target_energy: 0.8"]
+
+    B["📊 Load songs.csv<br/>All songs loaded"]
+
+    C["🔄 Loop: For Each Song"]
+
+    D{"1️⃣ Genre Match?"}
+    D_YES["+2.0 points"]
+    D_NO["+0 points"]
+
+    E{"2️⃣ Mood Match?"}
+    E_YES["+1.5 points"]
+    E_NO["+0 points"]
+
+    F["3️⃣ Energy Distance<br/>1.0 × 1 - |user_energy - song_energy|"]
+
+    G["📈 Total Score<br/>Genre + Mood + Energy"]
+
+    H["💾 Store Result<br/>Song + Score + Reasons"]
+
+    I{"More Songs?"}
+
+    J["🎯 Sort All Scores<br/>Rank by highest score"]
+
+    K["📤 Top K Recommendations<br/>Return top 5 with explanations"]
+
+    A --> B
+    B --> C
+    C --> D
+    D -->|YES| D_YES
+    D -->|NO| D_NO
+    D_YES --> E
+    D_NO --> E
+    E -->|YES| E_YES
+    E -->|NO| E_NO
+    E_YES --> F
+    E_NO --> F
+    F --> G
+    G --> H
+    H --> I
+    I -->|Yes| C
+    I -->|No| J
+    J --> K
+
+    style A fill:#ff1493,stroke:#ff1493,stroke-width:3px,color:#fff
+    style B fill:#00bfff,stroke:#00bfff,stroke-width:3px,color:#fff
+    style C fill:#ffd700,stroke:#ffd700,stroke-width:3px,color:#000
+    style D fill:#ff6347,stroke:#ff6347,stroke-width:3px,color:#fff
+    style D_YES fill:#00ff7f,stroke:#00ff7f,stroke-width:2px,color:#000
+    style D_NO fill:#ff69b4,stroke:#ff69b4,stroke-width:2px,color:#fff
+    style E fill:#ff6347,stroke:#ff6347,stroke-width:3px,color:#fff
+    style E_YES fill:#00ff7f,stroke:#00ff7f,stroke-width:2px,color:#000
+    style E_NO fill:#ff69b4,stroke:#ff69b4,stroke-width:2px,color:#fff
+    style F fill:#ff6347,stroke:#ff6347,stroke-width:3px,color:#fff
+    style G fill:#ff1493,stroke:#ff1493,stroke-width:3px,color:#fff
+    style H fill:#ff1493,stroke:#ff1493,stroke-width:3px,color:#fff
+    style I fill:#ffd700,stroke:#ffd700,stroke-width:3px,color:#000
+    style J fill:#00ff7f,stroke:#00ff7f,stroke-width:3px,color:#000
+    style K fill:#00bfff,stroke:#00bfff,stroke-width:3px,color:#fff
