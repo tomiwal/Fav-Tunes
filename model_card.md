@@ -42,21 +42,21 @@ For each song in the catalog, FavTunes calculates a score based on three factors
 
 ## 4. Data  
 
-**Dataset:** `data/songs.csv` containing ~50 songs with metadata
+**Dataset:** `data/songs.csv` containing 15 songs with metadata
 
 **Features available:**
 - Song details: id, title, artist
-- Audio features: genre, mood, energy, tempo, valence, danceability, acousticness, etc.
+- Audio features: genre, mood, energy, tempo, valence, danceability, acousticness, instrumentalness, speechiness, liveness, loudness_normalized
 
-**Genres represented:** Pop, Lofi, Rock, Synthwave, Jazz, Ambient
+**Genres represented:** Pop, Lofi, Rock, Synthwave, Jazz, Ambient, Indie Pop, Hip-Hop, Country, EDM, Folk, R&B (12 genres)
 
-**Moods represented:** Happy, Chill, Intense, Moody, Relaxed, Focused
+**Moods represented:** Happy, Chill, Intense, Moody, Relaxed, Focused, Melancholic, Energetic, Romantic, Contemplative
 
 **Data modifications:** None—using the original catalog as-is.
 
 **Missing perspectives:**
 - Limited diversity in artist representation (some artists appear multiple times)
-- Only 50 songs limits discovery for niche genres
+- Only 15 songs limits discovery for niche genres
 - No explicit user feedback or listening history data
 - Subjective mood labels may not capture all emotional nuances  
 
@@ -91,8 +91,9 @@ For each song in the catalog, FavTunes calculates a score based on three factors
 - User's listening history or mood evolution
 
 **Underrepresented genres/moods:**
-- Only 6 genres represented—limits discovery for electronic, classical, hip-hop, etc.
+- Only 12 genres represented—limits discovery for classical, reggae, metal, etc.
 - Mood labels are subjective; "chill" and "relaxed" might overlap
+- Small catalog of 15 songs creates high likelihood of recommending same artists repeatedly
 
 **Overfitting risks:**
 - Heavily weighted on genre match (+2.0)—users with niche genres get limited recommendations

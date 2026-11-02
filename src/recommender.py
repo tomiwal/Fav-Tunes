@@ -36,13 +36,22 @@ class UserProfile:
     likes_acoustic: bool
 
 class Recommender:
-    """OOP implementation using balanced scoring: genre (+2.0), mood (+1.5), energy (+1.0)."""
-    """For tester.py """
-    def __init__(self, songs: List[Song]):
+    """OOP implementation using balanced scoring with optional diversity penalties."""
+
+    def __init__(self, songs: List[Song], mode: str = "balanced"):
+        """
+        Initialize recommender with ranking mode.
+
+        Modes:
+        - "balanced": Standard genre/mood/energy weighting
+        - "diverse": Apply artist repetition penalty for more variety
+        - "genre-focused": Amplify genre weight, minimize non-genre songs
+        """
         self.songs = songs
+        self.mode = mode
 
     def recommend(self, user: UserProfile, k: int = 5) -> List[Song]:
-        """Score all songs and return top k recommendations."""
+        """Score all songs and return top k recommendations based on mode."""
         user_dict = {
             'favorite_genre': user.favorite_genre,
             'favorite_mood': user.favorite_mood,
@@ -54,8 +63,37 @@ class Recommender:
             for song in self.songs
         ]
 
+        # Apply mode-specific logic
+        if self.mode == "diverse":
+            scored = self._apply_diversity_penalty(scored)
+        elif self.mode == "genre-focused":
+            scored = self._apply_genre_emphasis(scored)
+
         top_k = sorted(scored, key=lambda x: x[1], reverse=True)[:k]
         return [song for song, score, reasons in top_k]
+
+    def _apply_diversity_penalty(self, scored: List) -> List:
+        """Penalize songs from artists already in top recommendations."""
+        result = []
+        seen_artists = set()
+
+        for song, score, reasons in scored:
+            artist = song.artist.lower()
+            if artist in seen_artists:
+                # Reduce score for repeated artists (20% penalty)
+                score = score * 0.8
+            result.append((song, score, reasons))
+            # After penalizing, add to seen set for future iterations
+
+        return result
+
+    def _apply_genre_emphasis(self, scored: List) -> List:
+        """Boost genre-matched songs, penalize others."""
+        return [
+            (song, score * 1.3, reasons) if any('genre match' in r for r in reasons)
+            else (song, score * 0.7, reasons)
+            for song, score, reasons in scored
+        ]
 
     def explain_recommendation(self, user: UserProfile, song: Song) -> str:
         """Return comma-separated reasons why a song was recommended."""

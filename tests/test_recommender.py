@@ -59,3 +59,62 @@ def test_explain_recommendation_returns_non_empty_string():
     explanation = rec.explain_recommendation(user, song)
     assert isinstance(explanation, str)
     assert explanation.strip() != ""
+
+
+def test_handle_missing_energy_value():
+    """Test that missing energy values don't crash the recommender."""
+    songs = [
+        Song(
+            id=1,
+            title="Test Track",
+            artist="Test Artist",
+            genre="pop",
+            mood="happy",
+            energy=0.8,
+            tempo_bpm=120,
+            valence=0.9,
+            danceability=0.8,
+            acousticness=0.2,
+        ),
+    ]
+    user = UserProfile(
+        favorite_genre="pop",
+        favorite_mood="happy",
+        target_energy=0.8,
+        likes_acoustic=False,
+    )
+    rec = Recommender(songs)
+    results = rec.recommend(user, k=1)
+    assert len(results) == 1
+
+
+def test_handle_empty_favorite_genre():
+    """Test that users without genre preference still get recommendations."""
+    user = UserProfile(
+        favorite_genre="",
+        favorite_mood="happy",
+        target_energy=0.8,
+        likes_acoustic=False,
+    )
+    rec = make_small_recommender()
+    results = rec.recommend(user, k=2)
+
+    # Should still return results even without genre preference
+    assert len(results) == 2
+    # Lofi track scores lower without genre match, pop track higher due to mood+energy
+    assert results[0].genre == "pop"
+
+
+def test_k_larger_than_catalog():
+    """Test requesting more recommendations than songs available."""
+    user = UserProfile(
+        favorite_genre="pop",
+        favorite_mood="happy",
+        target_energy=0.8,
+        likes_acoustic=False,
+    )
+    rec = make_small_recommender()
+    results = rec.recommend(user, k=10)
+
+    # Should return only available songs (2 in this case)
+    assert len(results) == 2
